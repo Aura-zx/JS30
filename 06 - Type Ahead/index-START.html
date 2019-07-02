@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+<script>
+const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+
+let cities = []
+fetch(endpoint)
+  .then(blob => blob.json())
+  .then(data => cities.push(...data))
+
+function findMatches(wordToMatch, cities) {
+  return cities.filter(place => {
+    let regex = new RegExp(wordToMatch, 'gi')
+    return place.city.match(regex) || place.state.match(regex)
+  })
+}
+
+function numberWithCommas(x) {
+  // \B 不位于开头或者结尾的，专门用来匹配位置的
+  // ?=(\d{3})+(?!\d)其后紧接包含3个数字的串和至少包含1个数字的串
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+function displayMatches() {
+  let matchArray = findMatches(this.value, cities)
+  let html = matchArray.map(place =>{
+    let regex = new RegExp(this.value, 'gi')
+    let cityName = place.city.replace(regex, `<span class="hl">${this.value}</span>`)
+    let stateName = place.state.replace(regex, `<span class="hl">${this.value}</span>`)
+    return `
+        <li>
+          <span class="name">${cityName}, ${stateName}</span>
+          <span class="population">${numberWithCommas(place.population)}</span>
+        `
+  }).join('');
+  suggestions.innerHTML = html;
+}
+
+let searchInput = document.querySelector('.search')
+let suggestions = document.querySelector('.suggestions')
+
+searchInput.addEventListener('change', displayMatches);
+searchInput.addEventListener('keyup', displayMatches);
+
+</script>
+  </body>
+</html>
